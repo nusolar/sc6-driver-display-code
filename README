@@ -1,0 +1,25 @@
+sc6-driver-display-code
+=======================
+
+For use with 4D Systems' uLCD28-PT. Written in 4DGL (I like to pronounce it "fordiggle"), the language 4D Systems decided to grace the world with.
+
+The IDE for 4DGL is available at http://www.4dsystems.com.au/prod.php?id=172 (if the link is broken, try searching for the Workshop4 IDE from their homepage. They are unjustifiably proud of it, so it shouldn't be hard to find.) Sparse documentation is available at the same location; in-depth documentation is not available anywhere.
+
+Currently, this code provides functionality for storing serial data in a buffer. Since 4DGL does not have structs, a buffer struct (containing the actual circular buffer, information on how much data it contains and where that data begins, and the size of the buffer) is made using an array as in the following example:
+
+1. Initialize a buffer struct:
+
+var myBufStruct[BUF_STRUCT_SIZE];
+
+2. Initialize the actual buffer:
+
+var buffer[BUFFER_SIZE];
+
+3. Initialize the fields of the buffer struct:
+
+myBufStruct[BUF_BUF] := buffer;
+myBufStruct[BUF_SIZE] := BUFFER_SIZE;
+myBufStruct[BUF_DATA_SZ] := 0;
+myBufStruct[BUF_START] := 0;
+
+Note that when accessing the circular buffer in the struct, 4DGL does not work well with multi-dimensional array indexing. What seems to work is creating a separate variable that is a pointer to the circular buffer (var buf_ptr; buf_ptr := myBufStruct[BUF-BUF];), and then using that variable to access elements of the circular buffer.
