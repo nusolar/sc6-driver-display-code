@@ -1,0 +1,154 @@
+#platform "uLCD-28PT"
+
+/****************************************************************************************
+*                                                                                       *
+*  Driver Display                                                                       *
+*                                                                                       *
+****************************************************************************************/
+
+#inherit "4DGL_16bitColours.fnc"
+
+#inherit "VisualConst.inc"
+
+#inherit "Driver DisplayConst.inc"
+
+#constant BUFFER_SIZE 20
+
+// For making something vaguely struct-like?
+#constant BUF_BUF, BUF_SIZE, BUF_START, BUF_DATA_SZ
+#constant BUF_STRUCT_SIZE 4
+
+
+/*
+ * printBuffer
+ *
+ * Print the data currently stored in the buffer (not the whole buffer)
+ *
+ * Parameters:
+ * - buffer: address for a char-per-slot buffer
+ * - b_size: size of the buffer
+ * - b_start: the index for the start of data in the buffer
+ * - data_size: the number of characters stored in the buffer
+ */
+func printBuffer(var buffer, var b_size, var b_start, var data_size)
+    var b_end;
+    b_end := (b_start + data_size) % b_size;
+
+    if (data_size == b_size) // overflow condition
+        putch(buffer[b_start]);
+        b_start := (b_start + 1) % b_size;
+    endif
+
+    while (b_start != b_end)
+        putch(buffer[b_start]);
+        b_start := (b_start + 1) % b_size;
+    wend
+endfunc
+
+
+/*
+ * showBuffer
+ *
+ * Show the current state of the buffer
+ *
+ * Parameters:
+ * - buffer: address for a char-per-slot buffer
+ * - b_size: size of the buffer
+ */
+func showBuffer(var buffer, var b_size)
+    var i;
+    for(i:=0; i < b_size; i++)
+        putch(buffer[i]);
+    next
+endfunc
+
+
+/*
+ * storeInBuffer
+ *
+ * Add a character to a given buffer
+ *
+ * Parameters:
+ * - buffer: address for a char-per-slot buffer
+ * - b_size: size of the buffer
+ * - p_b_start: pointer to a variable holding the start of the buffer
+ * - p_data_size: pointer to a variable holding the size of data in the buffer
+ * - char: character to add to the buffer
+ */
+func storeInBuffer(var buffer, var b_size, var p_b_start, var p_data_size, var char)
+    buffer[(*p_b_start + *p_data_size) % b_size] := char;
+
+    if (*p_data_size == b_size) // overflow condition
+        *p_b_start := (*p_b_start + 1) % b_size;
+    else if (*p_data_size < b_size)
+        (*p_data_size)++;
+    endif
+endfunc
+
+
+
+func main()
+    // Form1 1.0 generated 2/9/2013 4:11:21 PM
+
+    // Angularmeter1 1.0 generated 2/9/2013 4:11:21 PM
+
+    gfx_Set(SCREEN_MODE,LANDSCAPE_R);
+
+    var buffer[BUFFER_SIZE];
+
+    var buf_struct[BUF_STRUCT_SIZE];
+    buf_struct[BUF_BUF] := buffer;
+    buf_struct[BUF_SIZE] := BUFFER_SIZE;
+    buf_struct[BUF_START] := 0;
+    buf_struct[BUF_DATA_SZ] := 0;
+
+    var char;
+    var b_start := 0;
+    var data_size := 0;
+
+    // Initialization code
+    putstr("Waiting...\n");
+
+    if (!(disk:=file_Mount()))
+        while(!(disk :=file_Mount()))
+            putstr("Drive not mounted...");
+            pause(200);
+            gfx_Cls();
+            pause(200);
+        wend
+    endif
+    gfx_TransparentColour(0x0020);
+    gfx_Transparency(ON);
+
+    hndl := file_LoadImageControl("DRIVER~1.dat", "DRIVER~1.gci", 1);
+    // End initialization
+
+    gfx_Cls();
+
+    repeat
+        char := serin(); // char < 0 when no input received.
+        if (char >= 0 && char != 0x0D) // receieved non-CR character.
+            gfx_Cls();
+
+            storeInBuffer(buffer, BUFFER_SIZE, &b_start, &data_size, char);
+
+            showBuffer(buffer, BUFFER_SIZE);
+        else if (char == 0x0D) // CR: Print and reset buffer
+            gfx_Cls();
+            putstr("Buffer start: ");
+            putnum(DEC, b_start);
+            putstr("\nBuffer end: ");
+            putnum(DEC, (b_start + data_size) % BUFFER_SIZE);
+            putstr("\n");
+
+            putch(0x0A); // LF
+            showBuffer(buffer, BUFFER_SIZE);
+            putch(0x0A); // LF
+            printBuffer(buffer, BUFFER_SIZE, b_start, data_size);
+
+            b_start := (b_start + data_size) % BUFFER_SIZE; // not really needed.
+            data_size := 0;
+        endif
+    forever
+
+endfunc
