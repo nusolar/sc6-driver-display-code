@@ -13,10 +13,7 @@
 #inherit "Driver DisplayConst.inc"
 
 #constant BUFFER_SIZE 20
-
-// For making something vaguely struct-like?
 #constant BUF_BUF, BUF_SIZE, BUF_START, BUF_DATA_SZ
-
 #constant BUF_STRUCT_SIZE 4
 
 
@@ -26,27 +23,9 @@
  * Print the data currently stored in the buffer (not the whole buffer)
  *
  * Parameters:
- * - buffer: address for a char-per-slot buffer
- * - b_size: size of the buffer
- * - b_start: the index for the start of data in the buffer
- * - data_size: the number of characters stored in the buffer
+ * - buffer_s: a buffer array-struct
  */
-func printBuffer(var buffer, var b_size, var b_start, var data_size)
-    var b_end;
-    b_end := (b_start + data_size) % b_size;
-
-    if (data_size == b_size) // overflow condition
-        putch(buffer[b_start]);
-        b_start := (b_start + 1) % b_size;
-    endif
-
-    while (b_start != b_end)
-        putch(buffer[b_start]);
-        b_start := (b_start + 1) % b_size;
-    wend
-endfunc
-
-func printBufferStruct(var buffer_s)
+func printBuffer(var buffer_s)
     var b_end;
     b_end := (buffer_s[BUF_START] + buffer_s[BUF_DATA_SZ]) % buffer_s[BUF_SIZE];
     var buf_ptr;
@@ -72,17 +51,9 @@ endfunc
  * Show the current state of the buffer
  *
  * Parameters:
- * - buffer: address for a char-per-slot buffer
- * - b_size: size of the buffer
+ * - buffer: a buffer array-struct
  */
-func showBuffer(var buffer, var b_size)
-    var i;
-    for(i:=0; i < b_size; i++)
-        putch(buffer[i]);
-    next
-endfunc
-
-func showBufferStruct(var buffer_s)
+func showBuffer(var buffer_s)
     var i;
     var buf_ptr;
     buf_ptr := buffer_s[BUF_BUF];
@@ -98,24 +69,10 @@ endfunc
  * Add a character to a given buffer
  *
  * Parameters:
- * - buffer: address for a char-per-slot buffer
- * - b_size: size of the buffer
- * - p_b_start: pointer to a variable holding the start of the buffer
- * - p_data_size: pointer to a variable holding the size of data in the buffer
+ * - buffer_s: a buffer array-struct
  * - char: character to add to the buffer
  */
-func storeInBuffer(var buffer, var b_size, var p_b_start, var p_data_size, var char)
-    buffer[(*p_b_start + *p_data_size) % b_size] := char;
-
-    if (*p_data_size == b_size) // overflow condition
-        *p_b_start := (*p_b_start + 1) % b_size;
-    else if (*p_data_size < b_size)
-        (*p_data_size)++;
-    endif
-endfunc
-
-
-func storeInBufferStruct(var buffer_s, var char)
+func storeInBuffer(var buffer_s, var char)
     var buf_ptr;
     buf_ptr := buffer_s[BUF_BUF];
     buf_ptr[(buffer_s[BUF_START] + buffer_s[BUF_DATA_SZ]) % buffer_s[BUF_SIZE]] := char;
@@ -129,23 +86,9 @@ endfunc
 
 
 func main()
-    // Form1 1.0 generated 2/9/2013 4:11:21 PM
-
-    // Angularmeter1 1.0 generated 2/9/2013 4:11:21 PM
-
+    // Initialization code
     gfx_Set(SCREEN_MODE,LANDSCAPE_R);
 
-    var buffer[BUFFER_SIZE];
-
-    var buf_struct[BUF_STRUCT_SIZE];
-    buf_struct[BUF_BUF] := buffer;
-    buf_struct[BUF_SIZE] := BUFFER_SIZE;
-    buf_struct[BUF_START] := 0;
-    buf_struct[BUF_DATA_SZ] := 0;
-
-    var char;
-
-    // Initialization code
     putstr("Waiting...\n");
 
     if (!(disk:=file_Mount()))
@@ -162,6 +105,16 @@ func main()
     hndl := file_LoadImageControl("DRIVER~1.dat", "DRIVER~1.gci", 1);
     // End initialization
 
+    var buffer[BUFFER_SIZE];
+
+    var buf_struct[BUF_STRUCT_SIZE];
+    buf_struct[BUF_BUF] := buffer;
+    buf_struct[BUF_SIZE] := BUFFER_SIZE;
+    buf_struct[BUF_START] := 0;
+    buf_struct[BUF_DATA_SZ] := 0;
+
+    var char;
+
     gfx_Cls();
 
     repeat
@@ -169,19 +122,18 @@ func main()
         if (char >= 0 && char != 0x0D) // receieved non-CR character.
             gfx_Cls();
 
-            storeInBufferStruct(buf_struct, char);
+            storeInBuffer(buf_struct, char);
 
-            showBufferStruct(buf_struct);
+            showBuffer(buf_struct);
         else if (char == 0x0D) // CR: Print and reset buffer
             gfx_Cls();
 
-            showBufferStruct(buf_struct);
+            showBuffer(buf_struct);
             putch(0x0A); // LF
-            printBufferStruct(buf_struct);
+            printBuffer(buf_struct);
 
             buf_struct[BUF_START] := (buf_struct[BUF_START] + buf_struct[BUF_DATA_SZ]) % BUFFER_SIZE;
             buf_struct[BUF_DATA_SZ] := 0;
         endif
     forever
-
 endfunc
