@@ -28,55 +28,6 @@ Form
     OnTouchPressed               ''
     OnTouchReleased              ''
 end
-AngularMeter
-    Name                         Angularmeter1
-    Analogue                     (None)
-    Angle                        40
-    AngleOffset                  280
-    Caption                      Angularmeter1
-    CaptionXOffset               0
-    CaptionYOffset               0
-    CenterDotColor               clWhite
-    CenterDotWidth               2
-    Color                        BLACK
-    ColorZone1                   clGreen
-    ColorZone2                   clBlue
-    ColorZone3                   clRed
-    Decimals                     1
-    Font.Color                   clWhite
-    Font.Effects                 []
-    Font.Name                    Tahoma
-    Font.Size                    8
-    Font.Style                   []
-    Height                       195
-    Labels                       10
-    LabelsFont.Color             clWhite
-    LabelsFont.Effects           []
-    LabelsFont.Name              Tahoma
-    LabelsFont.Size              8
-    LabelsFont.Style             []
-    LabelsOffset                 30
-    Left                         0
-    Maxvalue                     100
-    Minvalue                     0
-    NeedleBasewidth              8
-    NeedleColor                  clRed
-    NeedleLength                 -1
-    Percent1                     60
-    Percent2                     25
-    Radius                       -1
-    Spacing                      45
-    Ticks                        11
-    TicksColor                   clWhite
-    TicksEnlarge                 10
-    TicksMax                     14
-    TicksMin                     5
-    Timer                        (None)
-    Top                          0
-    Visible                      Yes
-    Width                        240
-    OnChanged                    ''
-end
 Thermometer
     Name                         Thermometer1
     Caption                      Thermometer1

@@ -84,6 +84,63 @@ func storeInBuffer(var buffer_s, var char)
     endif
 endfunc
 
+/*
+ * resetBuffer
+ *
+ * Reset the buffer
+ *
+ * Parameters:
+ * - buffer_s: a buffer array-struct
+ */
+func resetBuffer(var buffer_s)
+    buffer_s[BUF_START] := (buffer_s[BUF_START] + buffer_s[BUF_DATA_SZ]) % BUFFER_SIZE;
+    buffer_s[BUF_DATA_SZ] := 0;
+endfunc
+
+/*
+ * bufferEqual
+ *
+ * Compare current buffer data to a string
+ *
+ * Paramters:
+ * - buffer_s: a buffer array-struct
+ * - str: string to compare to
+ *
+ * return:
+ * 0 if not equal, 1 if equal
+ */
+func bufferEqual(var buffer_s, var str)
+    var b_end;
+    var str_index := 0;
+    b_end := (buffer_s[BUF_START] + buffer_s[BUF_DATA_SZ]) % buffer_s[BUF_SIZE];
+    var buf_ptr;
+    buf_ptr := buffer_s[BUF_BUF];
+    var buf_start;
+    buf_start := buffer_s[BUF_START];
+    var char;
+
+    if (buffer_s[BUF_DATA_SZ] == buffer_s[BUF_SIZE]) // overflow condition
+        if (buf_ptr[buf_start] != (str[str_index] & 0xFF))
+            return 0;
+        endif
+        buf_start := (buf_start + 1) % buffer_s[BUF_SIZE];
+        str_index += 1;
+    endif
+
+    while (str_index != strlen(str))
+        if (buf_ptr[buf_start] != (str[str_index] & 0xFF))
+            return 0;
+        endif
+        buf_start := (buf_start + 1) % buffer_s[BUF_SIZE];
+        str_index += 1;
+    wend
+
+    if (buf_start != b_end)
+        return 0;
+    endif
+    return 1;
+endfunc
+
 
 func main()
     // Initialization code
@@ -115,25 +172,40 @@ func main()
 
     var char;
 
+    var velocity;
+
     gfx_Cls();
 
     repeat
         char := serin(); // char < 0 when no input received.
-        if (char >= 0 && char != 0x0D) // receieved non-CR character.
-            gfx_Cls();
-
+        gfx_Cls();
+        if (char >= 0 && char != '|' && char != ':') // receieved non-CR character.
             storeInBuffer(buf_struct, char);
-
-            showBuffer(buf_struct);
-        else if (char == 0x0D) // CR: Print and reset buffer
-            gfx_Cls();
-
-            showBuffer(buf_struct);
+        else if (char == '|')
             putch(0x0A); // LF
             printBuffer(buf_struct);
 
-            buf_struct[BUF_START] := (buf_struct[BUF_START] + buf_struct[BUF_DATA_SZ]) % BUFFER_SIZE;
-            buf_struct[BUF_DATA_SZ] := 0;
+            if (1) // should be, "if current field is velo", then ...
+                velocity = 2;
+            endif
+
+            resetBuffer(buf_struct);
+
+            gfx_Cls();
+
+            print("Velocity: ", velo);
+        else if (char == ':')
+            gfx_Cls();
+
+            putch(0x0A); // LF
+            printBuffer(buf_struct);
+
+            if (bufferEqual(buf_struct, "velo"))
+                // if strings are equal, set current field to velocity
+            endif
+
+            resetBuffer(buf_struct);
         endif
+
     forever
 endfunc
