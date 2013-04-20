@@ -23,3 +23,5 @@ myBufStruct[BUF_DATA_SZ] := 0;
 myBufStruct[BUF_START] := 0;
 
 Note that when accessing the circular buffer in the struct, 4DGL does not work well with multi-dimensional array indexing. What seems to work is creating a separate variable that is a pointer to the circular buffer (var buf_ptr; buf_ptr := myBufStruct[BUF-BUF];), and then using that variable to access elements of the circular buffer.
+
+The serial protocol which the driver display expects is documented in DriverDisplaySerial.txt.

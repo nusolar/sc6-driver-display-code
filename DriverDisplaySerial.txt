@@ -1,0 +1,20 @@
+The driver display expects serial data in the following form:
+
+|<field>:<value>|<field>:<value>...
+
+<field> := 	velo
+		|	curr
+		|	avlt
+		|	atmp
+		|	effy
+		
+<value> := (anything)
+
+The fields correspond as follows:
+velo = velocity
+curr = current
+avlt = average voltage
+atmp = average temperature
+effy = efficiency
+
+The field-value data can be received in any order with any relative frequency (i.e., velocity data can be received twice as often, or half as often, or 1.55 times as often, etc. as current data).
