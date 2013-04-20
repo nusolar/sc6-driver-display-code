@@ -15,6 +15,7 @@
 #constant BUFFER_SIZE 20
 #constant BUF_BUF, BUF_SIZE, BUF_START, BUF_DATA_SZ
 #constant BUF_STRUCT_SIZE 4
+#constant ST_NONE, ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY
 
 
 /*
@@ -172,36 +173,63 @@ func main()
 
     var char;
 
-    var velocity;
+    var velocity := 0;
+
+    var field_state := ST_NONE;
 
     gfx_Cls();
 
     repeat
         char := serin(); // char < 0 when no input received.
-        gfx_Cls();
         if (char >= 0 && char != '|' && char != ':') // receieved non-CR character.
             storeInBuffer(buf_struct, char);
         else if (char == '|')
-            putch(0x0A); // LF
-            printBuffer(buf_struct);
 
-            if (1) // should be, "if current field is velo", then ...
-                velocity = 2;
+            if (field_state == ST_VELOCITY) // should be, "if current field is velo", then ...
+                txt_MoveCursor(0, 0);
+                print("                      ");
+                txt_MoveCursor(0, 0);
+                print("Velocity: ");
+                field_state := ST_NONE;
+            else if (field_state == ST_CURRENT)
+                txt_MoveCursor(1, 0);
+                print("                      ");
+                txt_MoveCursor(1, 0);
+                print("Current: ");
+                field_state := ST_NONE;
+            else if (field_state == ST_AVG_VOLTAGE)
+                txt_MoveCursor(2, 0);
+                print("                      ");
+                txt_MoveCursor(2, 0);
+                print("Average Voltage: ");
+                field_state := ST_NONE;
+            else if (field_state == ST_AVG_TEMP)
+                txt_MoveCursor(3, 0);
+                print("                      ");
+                txt_MoveCursor(3, 0);
+                print("Average Temperature: ");
+                field_state := ST_NONE;
+            else if (field_state == ST_EFFICIENCY)
+                txt_MoveCursor(4, 0);
+                print("                      ");
+                txt_MoveCursor(4, 0);
+                print("Efficiency: ");
+                field_state := ST_NONE;
             endif
 
-            resetBuffer(buf_struct);
-
-            gfx_Cls();
-
-            print("Velocity: ", velo);
-        else if (char == ':')
-            gfx_Cls();
-
-            putch(0x0A); // LF
             printBuffer(buf_struct);
-
+            resetBuffer(buf_struct);
+        else if (char == ':')
             if (bufferEqual(buf_struct, "velo"))
-                // if strings are equal, set current field to velocity
+                field_state := ST_VELOCITY;
+            else if (bufferEqual(buf_struct, "curr"))
+                field_state := ST_CURRENT;
+            else if (bufferEqual(buf_struct, "avlt"))
+                field_state := ST_AVG_VOLTAGE;
+            else if (bufferEqual(buf_struct, "atmp"))
+                field_state := ST_AVG_TEMP;
+            else if (bufferEqual(buf_struct, "effy"))
+                field_state := ST_EFFICIENCY;
             endif
 
             resetBuffer(buf_struct);
