@@ -144,7 +144,7 @@ endfunc
 
 
 func main()
-    // Initialization code
+    // Display initialization code
     gfx_Set(SCREEN_MODE,LANDSCAPE_R);
 
     putstr("Waiting...\n");
@@ -161,76 +161,55 @@ func main()
     gfx_Transparency(ON);
 
     hndl := file_LoadImageControl("DRIVER~1.dat", "DRIVER~1.gci", 1);
-    // End initialization
 
+    // Incoming data initialization
+    var code_array[] := ["velo", "curr", "avlt", "atmp", "effy"];
+    var disp_text_array[] := ["Velocity", "Current", "Average Voltage", "Average Temperature", "Efficiency"];
+    var state_array[] := [ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY];
+    var num_fields := 5;
+    var field_state := ST_NONE;
+
+    // Buffer initialization
     var buffer[BUFFER_SIZE];
-
     var buf_struct[BUF_STRUCT_SIZE];
     buf_struct[BUF_BUF] := buffer;
     buf_struct[BUF_SIZE] := BUFFER_SIZE;
     buf_struct[BUF_START] := 0;
     buf_struct[BUF_DATA_SZ] := 0;
 
+    // Miscellaneous initialization
     var char;
-
-    var velocity := 0;
-
-    var field_state := ST_NONE;
-
+    var i;
     gfx_Cls();
 
     repeat
         char := serin(); // char < 0 when no input received.
-        if (char >= 0 && char != '|' && char != ':') // receieved non-CR character.
+        if (char >= 0 && char != '|' && char != ':')
             storeInBuffer(buf_struct, char);
         else if (char == '|')
 
-            if (field_state == ST_VELOCITY) // should be, "if current field is velo", then ...
-                txt_MoveCursor(0, 0);
-                print("                      ");
-                txt_MoveCursor(0, 0);
-                print("Velocity: ");
-                field_state := ST_NONE;
-            else if (field_state == ST_CURRENT)
-                txt_MoveCursor(1, 0);
-                print("                      ");
-                txt_MoveCursor(1, 0);
-                print("Current: ");
-                field_state := ST_NONE;
-            else if (field_state == ST_AVG_VOLTAGE)
-                txt_MoveCursor(2, 0);
-                print("                      ");
-                txt_MoveCursor(2, 0);
-                print("Average Voltage: ");
-                field_state := ST_NONE;
-            else if (field_state == ST_AVG_TEMP)
-                txt_MoveCursor(3, 0);
-                print("                      ");
-                txt_MoveCursor(3, 0);
-                print("Average Temperature: ");
-                field_state := ST_NONE;
-            else if (field_state == ST_EFFICIENCY)
-                txt_MoveCursor(4, 0);
-                print("                      ");
-                txt_MoveCursor(4, 0);
-                print("Efficiency: ");
+            for (i := 0; i < num_fields; i++)
+                if (field_state == state_array[i])
+                    txt_MoveCursor(i, 0);
+                    print("                         ");
+                    txt_MoveCursor(i, 0);
+                    putstr(disp_text_array[i]);
+                    print(": ");
+                endif
+            next
+
+            if (field_state != ST_NONE)
+                printBuffer(buf_struct);
                 field_state := ST_NONE;
             endif
 
-            printBuffer(buf_struct);
             resetBuffer(buf_struct);
         else if (char == ':')
-            if (bufferEqual(buf_struct, "velo"))
-                field_state := ST_VELOCITY;
-            else if (bufferEqual(buf_struct, "curr"))
-                field_state := ST_CURRENT;
-            else if (bufferEqual(buf_struct, "avlt"))
-                field_state := ST_AVG_VOLTAGE;
-            else if (bufferEqual(buf_struct, "atmp"))
-                field_state := ST_AVG_TEMP;
-            else if (bufferEqual(buf_struct, "effy"))
-                field_state := ST_EFFICIENCY;
-            endif
+            for (i := 0; i < num_fields; i++)
+                if (bufferEqual(buf_struct, code_array[i]))
+                    field_state := state_array[i];
+                endif
+            next
 
             resetBuffer(buf_struct);
         endif
