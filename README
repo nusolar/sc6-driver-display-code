@@ -24,4 +24,9 @@ myBufStruct[BUF_START] := 0;
 
 Note that when accessing the circular buffer in the struct, 4DGL does not work well with multi-dimensional array indexing. What seems to work is creating a separate variable that is a pointer to the circular buffer (var buf_ptr; buf_ptr := myBufStruct[BUF-BUF];), and then using that variable to access elements of the circular buffer.
 
-The serial protocol which the driver display expects is documented in DriverDisplaySerial.txt.
+The serial protocol which the driver display expects is documented in DriverDisplaySerial.txt. To add additional fields, you'll need to do 5 things:
+1. Add the new code to code_array, to identify the field for serial transmission (e.g., 'velo', 'avlt')
+2. Add new display text to disp_text_array (e.g., "Velocity", "Average voltage")
+3. Add a new ST_* variable to the set of constants at the beginning of the file
+4. Add that new ST_* constant to state_array (e.g., ST_VELOCITY, ST_AVG_VOLTAGE)
+5. Update num_fields to represent the total number of fields currently handled.
