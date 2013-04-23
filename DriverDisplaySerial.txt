@@ -7,6 +7,7 @@ The driver display expects serial data in the following form:
 		|	avlt
 		|	atmp
 		|	effy
+		|	text
 		
 <value> := (anything)
 
@@ -16,5 +17,6 @@ curr = current
 avlt = average voltage
 atmp = average temperature
 effy = efficiency
+text = generic message
 
 The field-value data can be received in any order with any relative frequency (i.e., velocity data can be received twice as often, or half as often, or 1.55 times as often, etc. as current data).
