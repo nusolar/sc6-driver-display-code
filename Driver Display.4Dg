@@ -12,10 +12,11 @@
 
 #inherit "Driver DisplayConst.inc"
 
-#constant BUFFER_SIZE 20
+#constant BUFFER_SIZE 50
 #constant BUF_BUF, BUF_SIZE, BUF_START, BUF_DATA_SZ
 #constant BUF_STRUCT_SIZE 4
-#constant ST_NONE, ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY
+#constant ST_NONE, ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY, ST_MESSAGE
+#constant LINE_WIDTH 320
 
 
 /*
@@ -25,6 +26,9 @@
  *
  * Parameters:
  * - buffer_s: a buffer array-struct
+ *
+ * Returns:
+ * number of characters printed
  */
 func printBuffer(var buffer_s)
     var b_end;
@@ -33,16 +37,21 @@ func printBuffer(var buffer_s)
     buf_ptr := buffer_s[BUF_BUF];
     var buf_start;
     buf_start := buffer_s[BUF_START];
+    var char_count := 0;
 
     if (buffer_s[BUF_DATA_SZ] == buffer_s[BUF_SIZE]) // overflow condition
         putch(buf_ptr[buf_start]);
         buf_start := (buf_start + 1) % buffer_s[BUF_SIZE];
+        char_count += 1;
     endif
 
     while (buf_start != b_end)
         putch(buf_ptr[buf_start]);
         buf_start := (buf_start + 1) % buffer_s[BUF_SIZE];
+        char_count += 1;
     wend
+
+    return char_count;
 endfunc
 
 
@@ -143,6 +152,26 @@ func bufferEqual(var buffer_s, var str)
 endfunc
 
 
+/*
+ * clearLine
+ *
+ * Clear a line, starting at a certain offset
+ *
+ * Parameters:
+ * - offset: the pixel offset at which to begin
+ */
+func clearLine(var offset)
+    var pixelsToClear;
+    pixelsToClear := LINE_WIDTH - offset;
+    var spaceChars;
+    spaceChars := pixelsToClear / charwidth(' ');
+    var i;
+    for(i := 0; i < spaceChars; i++)
+        print(" ");
+    next
+endfunc
+
+
 func main()
     // Display initialization code
     gfx_Set(SCREEN_MODE,LANDSCAPE_R);
@@ -163,11 +192,13 @@ func main()
     hndl := file_LoadImageControl("DRIVER~1.dat", "DRIVER~1.gci", 1);
 
     // Incoming data initialization
-    var code_array[] := ["velo", "curr", "avlt", "atmp", "effy"];
-    var disp_text_array[] := ["Velocity", "Current", "Average Voltage", "Average Temperature", "Efficiency"];
-    var state_array[] := [ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY];
-    var num_fields := 5;
+    var code_array[] := ["velo", "curr", "avlt", "atmp", "effy", "text"];
+    var disp_text_array[] := ["Velocity", "Current", "Average Voltage", "Average Temperature", "Efficiency", "Message"];
+    var state_array[] := [ST_VELOCITY, ST_CURRENT, ST_AVG_VOLTAGE, ST_AVG_TEMP, ST_EFFICIENCY, ST_MESSAGE];
+    var num_fields := 6;
     var field_state := ST_NONE;
+    var debug_str := "empty";
+    var msg_lines := 0;
 
     // Buffer initialization
     var buffer[BUFFER_SIZE];
@@ -179,6 +210,7 @@ func main()
 
     // Miscellaneous initialization
     var char;
+    var chars;
     var i;
     gfx_Cls();
 
@@ -191,7 +223,14 @@ func main()
             for (i := 0; i < num_fields; i++)
                 if (field_state == state_array[i])
                     txt_MoveCursor(i, 0);
-                    print("                         ");
+                    clearLine(0);
+                    if (field_state == ST_MESSAGE)
+                        var msg_line;
+                        for (msg_line := 1; msg_line < msg_lines; msg_line++)
+                            txt_MoveCursor(i + msg_line, 0);
+                            clearLine(0);
+                        next
+                    endif
                     txt_MoveCursor(i, 0);
                     putstr(disp_text_array[i]);
                     print(": ");
@@ -199,7 +238,13 @@ func main()
             next
 
             if (field_state != ST_NONE)
-                printBuffer(buf_struct);
+                chars := printBuffer(buf_struct);
+                if (field_state == ST_MESSAGE)
+                    var chars_per_line;
+                    chars_per_line := LINE_WIDTH / charwidth(' ');
+                    msg_lines := (chars - (chars % chars_per_line))
+                        / chars_per_line + 1;
+                endif
                 field_state := ST_NONE;
             endif
 
