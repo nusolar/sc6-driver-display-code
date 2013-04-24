@@ -1,6 +1,6 @@
 The driver display expects serial data in the following form:
 
-|<field>:<value>|<field>:<value>...
+<field><field-val separator><value><record separator>...
 
 <field> := 	velo
 		|	curr
@@ -8,8 +8,12 @@ The driver display expects serial data in the following form:
 		|	atmp
 		|	effy
 		|	text
+
+<field-val separator> := ASCII 0x1F (^_)
 		
 <value> := (anything)
+
+<record separator> := ASCII 0x1E (^^, Ctrl + ^)
 
 The fields correspond as follows:
 velo = velocity
