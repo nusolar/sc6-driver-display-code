@@ -216,9 +216,9 @@ func main()
 
     repeat
         char := serin(); // char < 0 when no input received.
-        if (char >= 0 && char != '|' && char != ':')
+        if (char >= 0 && char != 0x1E && char != 0x1F)
             storeInBuffer(buf_struct, char);
-        else if (char == '|')
+        else if (char == 0x1E) // control character for record separator, ^^ (Ctrl+^)
 
             for (i := 0; i < num_fields; i++)
                 if (field_state == state_array[i])
@@ -249,7 +249,7 @@ func main()
             endif
 
             resetBuffer(buf_struct);
-        else if (char == ':')
+        else if (char == 0x1F) // control character for unit separator, ^_
             for (i := 0; i < num_fields; i++)
                 if (bufferEqual(buf_struct, code_array[i]))
                     field_state := state_array[i];
