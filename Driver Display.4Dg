@@ -174,7 +174,7 @@ endfunc
 
 func main()
     // Display initialization code
-    gfx_Set(SCREEN_MODE,LANDSCAPE_R);
+    gfx_Set(SCREEN_MODE,LANDSCAPE);
 
     putstr("Waiting...\n");
 
